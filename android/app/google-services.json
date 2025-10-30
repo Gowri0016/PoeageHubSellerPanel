@@ -1,0 +1,135 @@
+{
+  "project_info": {
+    "project_number": "270573902154",
+    "project_id": "poeage-hub",
+    "storage_bucket": "poeage-hub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:270573902154:android:4144db3db7a01f432f49b3",
+        "android_client_info": {
+          "package_name": "com.poeage.adminpanel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "270573902154-7le8b4setu71bgubm3qfkhkdt4k4ubj5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC55hcVdkjLnDL7FBiVkHRXCTq75EwN0Ro"
+        },
+        {
+          "current_key": "AIzaSyAzQMfBcpCqB6nhFuovW_Mte7EJL3vXBj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "270573902154-7le8b4setu71bgubm3qfkhkdt4k4ubj5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "270573902154-bjpdcnuf3o3h09s5e20kd4omf3u2lcpf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.adminpanel"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:270573902154:android:a7f2c8b4077e0bd02f49b3",
+        "android_client_info": {
+          "package_name": "com.poeage.hub"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "270573902154-b168p9q5v70iamt7r48ls2e52ahhk2j0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.poeage.hub",
+            "certificate_hash": "50db5263de4b13653353ca6fe9928193ec9175a1"
+          }
+        },
+        {
+          "client_id": "270573902154-7le8b4setu71bgubm3qfkhkdt4k4ubj5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC55hcVdkjLnDL7FBiVkHRXCTq75EwN0Ro"
+        },
+        {
+          "current_key": "AIzaSyAzQMfBcpCqB6nhFuovW_Mte7EJL3vXBj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "270573902154-7le8b4setu71bgubm3qfkhkdt4k4ubj5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "270573902154-bjpdcnuf3o3h09s5e20kd4omf3u2lcpf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.adminpanel"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:270573902154:android:e994b69a7322128f2f49b3",
+        "android_client_info": {
+          "package_name": "com.poeage.sellerpanel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "270573902154-7le8b4setu71bgubm3qfkhkdt4k4ubj5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC55hcVdkjLnDL7FBiVkHRXCTq75EwN0Ro"
+        },
+        {
+          "current_key": "AIzaSyAzQMfBcpCqB6nhFuovW_Mte7EJL3vXBj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "270573902154-7le8b4setu71bgubm3qfkhkdt4k4ubj5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "270573902154-bjpdcnuf3o3h09s5e20kd4omf3u2lcpf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.adminpanel"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
