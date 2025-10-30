@@ -43,6 +43,25 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      if (message.contains('REJECTED|')) {
+        // Expected format: REJECTED|<reason>|<iso timestamp>
+        String reason = '';
+        String rejectedAt = '';
+        try {
+          final parts = message.split('|');
+          if (parts.length >= 2) reason = parts[1];
+          if (parts.length >= 3) rejectedAt = parts[2];
+        } catch (_) {}
+        Navigator.of(context).pushReplacementNamed(
+          '/rejected',
+          arguments: {
+            'reason': reason,
+            'rejectedAt': rejectedAt,
+          },
+        );
+        return;
+      }
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(error.toString())));

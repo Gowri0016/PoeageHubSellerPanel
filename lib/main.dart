@@ -9,6 +9,7 @@ import 'screens/waiting_approval_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_product_screen.dart';
 import 'models/product.dart';
+import 'screens/rejected_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/signup': (context) => const SignupScreen(),
           '/waiting': (context) => const WaitingApprovalScreen(),
+          '/rejected': (context) => const RejectedScreen(),
           '/home': (context) => const HomeScreen(),
           '/add-product': (context) => const AddProductScreen(),
           '/edit-product': (context) => AddProductScreen(

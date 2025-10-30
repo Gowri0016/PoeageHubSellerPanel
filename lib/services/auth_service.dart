@@ -211,26 +211,113 @@ class AuthService {
         throw Exception('Authentication failed');
       }
 
-      final sellerDoc = await _firestore
+      final uid = userCredential.user!.uid;
+
+      // First, check if seller exists in Approved path
+      final approvedDoc = await _firestore
           .collection('Sellers')
-          .doc(userCredential.user!.uid)
+          .doc('Approved')
+          .collection('Sellers')
+          .doc(uid)
           .get();
 
-      if (!sellerDoc.exists) {
-        throw Exception('Seller profile not found');
+      if (approvedDoc.exists) {
+        final seller = Seller.fromMap(approvedDoc.data() as Map<String, dynamic>);
+        if (seller.isApproved) {
+          debugPrint('signIn: seller $uid is approved and found in Approved path');
+          return seller;
+        } else {
+          // Edge: present in Approved path but status not approved
+          debugPrint('signIn: seller $uid in Approved path but status=${seller.approvalStatus}');
+          await _auth.signOut();
+          throw Exception('PENDING_APPROVAL');
+        }
       }
 
-      final seller = Seller.fromMap(sellerDoc.data() as Map<String, dynamic>);
+      // Check Rejected path
+      final rejectedDoc = await _firestore
+          .collection('Sellers')
+          .doc('Rejected')
+          .collection('Sellers')
+          .doc(uid)
+          .get();
 
-      if (!seller.isApproved) {
-        // sign out locally and throw a special token so UI can route to waiting screen
-        debugPrint('signIn: seller ${seller.id} not approved yet');
+      if (rejectedDoc.exists) {
+        final data = rejectedDoc.data() as Map<String, dynamic>;
+        final reason = (data['rejectionReason'] ?? 'Your application was rejected.').toString();
+        final rejectedAt = data['rejectedAt'];
+        String rejectedAtIso = '';
+        if (rejectedAt is Timestamp) {
+          rejectedAtIso = rejectedAt.toDate().toIso8601String();
+        } else if (rejectedAt is DateTime) {
+          rejectedAtIso = rejectedAt.toIso8601String();
+        } else if (rejectedAt != null) {
+          rejectedAtIso = rejectedAt.toString();
+        }
+        debugPrint('signIn: seller $uid found in Rejected path; reason=$reason');
+        await _auth.signOut();
+        throw Exception('REJECTED|$reason|$rejectedAtIso');
+      }
+
+      // Not in Approved; check Pending path
+      final pendingDoc = await _firestore
+          .collection('Sellers')
+          .doc('Pending')
+          .collection('Sellers')
+          .doc(uid)
+          .get();
+
+      if (pendingDoc.exists) {
+        debugPrint('signIn: seller $uid found in Pending path; blocking login until approved');
         await _auth.signOut();
         throw Exception('PENDING_APPROVAL');
       }
 
-      debugPrint('signIn: seller ${seller.id} approved, returning seller');
-      return seller;
+      // Not found in either path
+      // Fallback: search across all Sellers subcollections in Firestore
+      debugPrint('signIn: direct lookups not found, running collectionGroup search for uid=$uid');
+      final cgSnap = await _firestore
+          .collectionGroup('Sellers')
+          .where('id', isEqualTo: uid)
+          .limit(1)
+          .get();
+
+      if (cgSnap.docs.isNotEmpty) {
+        final doc = cgSnap.docs.first;
+        // Determine parent status by checking parent document id (Approved/Pending/Rejected)
+        final parentStatusDocId = doc.reference.parent.parent?.id ?? '';
+        final data = doc.data();
+
+        if (parentStatusDocId == 'Approved') {
+          final seller = Seller.fromMap(data);
+          if (seller.isApproved) {
+            debugPrint('signIn: found via collectionGroup under Approved; proceeding');
+            return seller;
+          }
+          await _auth.signOut();
+          throw Exception('PENDING_APPROVAL');
+        } else if (parentStatusDocId == 'Pending') {
+          debugPrint('signIn: found via collectionGroup under Pending; blocking');
+          await _auth.signOut();
+          throw Exception('PENDING_APPROVAL');
+        } else if (parentStatusDocId == 'Rejected') {
+          final reason = (data['rejectionReason'] ?? 'Your application was rejected.').toString();
+          final rejectedAt = data['rejectedAt'];
+          String rejectedAtIso = '';
+          if (rejectedAt is Timestamp) {
+            rejectedAtIso = rejectedAt.toDate().toIso8601String();
+          } else if (rejectedAt is DateTime) {
+            rejectedAtIso = rejectedAt.toIso8601String();
+          } else if (rejectedAt != null) {
+            rejectedAtIso = rejectedAt.toString();
+          }
+          debugPrint('signIn: found via collectionGroup under Rejected; reason=$reason');
+          await _auth.signOut();
+          throw Exception('REJECTED|$reason|$rejectedAtIso');
+        }
+      }
+
+      throw Exception('Seller profile not found');
     } catch (e, st) {
       debugPrint('signIn ERROR for $email: $e\n$st');
       rethrow;
@@ -244,14 +331,34 @@ class AuthService {
   Future<Seller?> getCurrentSeller() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      debugPrint('getCurrentSeller: loading seller doc for ${user.uid}');
-      DocumentSnapshot doc = await _firestore
+      debugPrint('getCurrentSeller: loading seller doc for ${user.uid} from Approved path');
+      final approvedDoc = await _firestore
+          .collection('Sellers')
+          .doc('Approved')
           .collection('Sellers')
           .doc(user.uid)
           .get();
-      debugPrint('getCurrentSeller: doc.exists=${doc.exists} for ${user.uid}');
-      if (doc.exists) {
-        return Seller.fromMap(doc.data() as Map<String, dynamic>);
+      debugPrint('getCurrentSeller: approvedDoc.exists=${approvedDoc.exists} for ${user.uid}');
+      if (approvedDoc.exists) {
+        return Seller.fromMap(approvedDoc.data() as Map<String, dynamic>);
+      }
+
+      // Fallback: find via collectionGroup under Approved
+      debugPrint('getCurrentSeller: approved direct doc not found, trying collectionGroup');
+      final cgSnap = await _firestore
+          .collectionGroup('Sellers')
+          .where('id', isEqualTo: user.uid)
+          .limit(3)
+          .get();
+      for (final d in cgSnap.docs) {
+        final parentStatusDocId = d.reference.parent.parent?.id ?? '';
+        if (parentStatusDocId == 'Approved') {
+          final seller = Seller.fromMap(d.data());
+          if (seller.isApproved) {
+            debugPrint('getCurrentSeller: found Approved via collectionGroup');
+            return seller;
+          }
+        }
       }
     }
     return null;
