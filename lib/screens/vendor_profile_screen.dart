@@ -62,7 +62,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           rethrow;
         }
       } catch (e2) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text('Update failed: $e2')));
@@ -73,8 +73,9 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
     // reload provider seller
     await context.read<AuthProvider>().loadCurrentSeller();
+    if (!mounted) return;
     setState(() => _isEditing = false);
-    if (context.mounted) {
+    if (mounted) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Profile updated')));

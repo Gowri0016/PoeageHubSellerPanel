@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/auth_provider.dart';
 import '../services/product_service.dart';
+import '../constants/taxonomy.dart';
 
 class AddProductScreen extends StatefulWidget {
   static const routeName = '/add-product';
@@ -19,33 +20,47 @@ class AddProductScreen extends StatefulWidget {
 class _AddProductScreenState extends State<AddProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _brandController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
   final _categoryController = TextEditingController();
+  final _subCategoryController = TextEditingController();
+  final _minStockController = TextEditingController();
+  DateTime? _expiryDate;
   final List<File> _imageFiles = [];
   final ProductService _productService = ProductService();
   bool _isLoading = false;
+
+  List<String> get _categories => Taxonomy.categories;
+  Map<String, List<String>> get _subCategories => Taxonomy.subcategories;
 
   @override
   void initState() {
     super.initState();
     if (widget.product != null) {
       _nameController.text = widget.product!.name;
+      _brandController.text = widget.product!.brandName;
       _descriptionController.text = widget.product!.description;
       _priceController.text = widget.product!.price.toString();
       _stockController.text = widget.product!.stock.toString();
       _categoryController.text = widget.product!.category;
+      _subCategoryController.text = widget.product!.subCategory;
+      _minStockController.text = widget.product!.minStock.toString();
+      _expiryDate = widget.product!.expiryDate;
     }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _brandController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
     _stockController.dispose();
     _categoryController.dispose();
+    _subCategoryController.dispose();
+    _minStockController.dispose();
     super.dispose();
   }
 
@@ -76,24 +91,38 @@ class _AddProductScreenState extends State<AddProductScreen> {
       final seller = context.read<AuthProvider>().currentSeller;
       if (seller == null) throw Exception('No seller found');
 
+      final category = _categoryController.text.trim();
+      final subCategory = _subCategoryController.text.trim();
+      final newId = widget.product?.id ?? DateTime.now().millisecondsSinceEpoch.toString();
+
       List<String> imageUrls = [];
       if (_imageFiles.isNotEmpty) {
-        imageUrls = await _productService.uploadImages(_imageFiles, seller.id);
+        imageUrls = await _productService.uploadImages(
+          _imageFiles,
+          category,
+          subCategory,
+          newId,
+        );
       }
 
       final product = Product(
-        id:
-            widget.product?.id ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
+        id: newId,
         sellerId: seller.id,
+        sellerName: seller.sellerName,
+        businessName: seller.businessName,
+        phone: seller.phone,
         name: _nameController.text,
+        brandName: _brandController.text,
         description: _descriptionController.text,
         price: double.parse(_priceController.text),
         stock: int.parse(_stockController.text),
         images: widget.product == null
             ? imageUrls
             : [...widget.product!.images, ...imageUrls],
-        category: _categoryController.text,
+        category: category,
+        subCategory: subCategory,
+        minStock: int.tryParse(_minStockController.text) ?? 0,
+        expiryDate: _expiryDate,
         createdAt: widget.product?.createdAt ?? DateTime.now(),
       );
 
@@ -126,6 +155,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.product == null ? 'Add Product' : 'Edit Product'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil('/home', (route) => false);
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -146,6 +182,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _brandController,
+                decoration: const InputDecoration(
+                  labelText: 'Brand Name',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -200,18 +244,90 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _categoryController,
+              DropdownButtonFormField<String>(
+                value: _categoryController.text.isEmpty ? null : _categoryController.text,
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                 ),
+                items: _categories
+                    .map((c) => DropdownMenuItem<String>(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _categoryController.text = val ?? '';
+                    // reset subcategory when category changes
+                    _subCategoryController.text = '';
+                  });
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter category';
+                    return 'Please select category';
                   }
                   return null;
                 },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _subCategoryController.text.isEmpty ? null : _subCategoryController.text,
+                decoration: const InputDecoration(
+                  labelText: 'Sub Category',
+                  border: OutlineInputBorder(),
+                ),
+                items: (_subCategories[_categoryController.text] ?? [])
+                    .map((s) => DropdownMenuItem<String>(value: s, child: Text(s)))
+                    .toList(),
+                onChanged: (val) {
+                  setState(() {
+                    _subCategoryController.text = val ?? '';
+                  });
+                },
+                validator: (value) {
+                  if ((_subCategories[_categoryController.text] ?? []).isNotEmpty) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select sub category';
+                    }
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _minStockController,
+                decoration: const InputDecoration(
+                  labelText: 'Minimum Stock',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.event),
+                      label: Text(
+                        _expiryDate == null
+                            ? 'Pick Expiry Date (optional)'
+                            : 'Expiry: ${_expiryDate!.toLocal().toString().split(' ').first}',
+                      ),
+                      onPressed: () async {
+                        final now = DateTime.now();
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _expiryDate ?? now,
+                          firstDate: now,
+                          lastDate: DateTime(now.year + 10),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _expiryDate = picked;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
