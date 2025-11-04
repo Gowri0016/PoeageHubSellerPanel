@@ -18,6 +18,9 @@ class Product {
   final double? productionCost;
   final String unitMode; // 'single' | 'multi'
   final String variantMode; // 'single' | 'multi'
+  final List<UnitOption> units; // when unitMode == 'multi'
+  final List<VariantOption> variants; // when variantMode == 'multi'
+  final List<ComboOption> combos; // when both unitMode & variantMode == 'multi'
   final DateTime createdAt;
 
   Product({
@@ -40,6 +43,9 @@ class Product {
     this.productionCost,
     this.unitMode = 'single',
     this.variantMode = 'single',
+    this.units = const [],
+    this.variants = const [],
+    this.combos = const [],
     required this.createdAt,
   });
 
@@ -64,6 +70,9 @@ class Product {
       'productionCost': productionCost,
       'unitMode': unitMode,
       'variantMode': variantMode,
+      'units': units.map((u) => u.toMap()).toList(),
+      'variants': variants.map((v) => v.toMap()).toList(),
+      'combos': combos.map((c) => c.toMap()).toList(),
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -95,9 +104,131 @@ class Product {
           : null,
       unitMode: map['unitMode'] ?? 'single',
       variantMode: map['variantMode'] ?? 'single',
+      units: (map['units'] as List<dynamic>? ?? [])
+          .map((e) => UnitOption.fromMap(Map<String, dynamic>.from(e)))
+          .toList(),
+      variants: (map['variants'] as List<dynamic>? ?? [])
+          .map((e) => VariantOption.fromMap(Map<String, dynamic>.from(e)))
+          .toList(),
+      combos: (map['combos'] as List<dynamic>? ?? [])
+          .map((e) => ComboOption.fromMap(Map<String, dynamic>.from(e)))
+          .toList(),
       createdAt: DateTime.parse(
         map['createdAt'] ?? DateTime.now().toIso8601String(),
       ),
     );
   }
+}
+
+class UnitOption {
+  final String id; // e.g., "500g", "1kg", "1L"
+  final String label; // display label
+  final double productionCost;
+  final double sellingPrice;
+  final double? specialPrice;
+  final List<String> images;
+
+  UnitOption({
+    required this.id,
+    required this.label,
+    required this.productionCost,
+    required this.sellingPrice,
+    this.specialPrice,
+    this.images = const [],
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'label': label,
+        'productionCost': productionCost,
+        'sellingPrice': sellingPrice,
+        'specialPrice': specialPrice,
+        'images': images,
+      };
+
+  factory UnitOption.fromMap(Map<String, dynamic> map) => UnitOption(
+        id: map['id'] ?? '',
+        label: map['label'] ?? '',
+        productionCost: (map['productionCost'] ?? 0).toDouble(),
+        sellingPrice: (map['sellingPrice'] ?? 0).toDouble(),
+        specialPrice:
+            map['specialPrice'] != null ? (map['specialPrice'] as num).toDouble() : null,
+        images: List<String>.from(map['images'] ?? []),
+      );
+}
+
+class VariantOption {
+  final String id; // e.g., "Red", "64GB"
+  final String name; // display name
+  final double? productionCost;
+  final double? sellingPrice;
+  final double? specialPrice;
+  final List<String> images;
+
+  VariantOption({
+    required this.id,
+    required this.name,
+    this.productionCost,
+    this.sellingPrice,
+    this.specialPrice,
+    this.images = const [],
+  });
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'productionCost': productionCost,
+        'sellingPrice': sellingPrice,
+        'specialPrice': specialPrice,
+        'images': images,
+      };
+
+  factory VariantOption.fromMap(Map<String, dynamic> map) => VariantOption(
+        id: map['id'] ?? '',
+        name: map['name'] ?? '',
+        productionCost:
+            map['productionCost'] != null ? (map['productionCost'] as num).toDouble() : null,
+        sellingPrice:
+            map['sellingPrice'] != null ? (map['sellingPrice'] as num).toDouble() : null,
+        specialPrice:
+            map['specialPrice'] != null ? (map['specialPrice'] as num).toDouble() : null,
+        images: List<String>.from(map['images'] ?? []),
+      );
+}
+
+class ComboOption {
+  final String unitId;
+  final String variantId;
+  final double productionCost;
+  final double sellingPrice;
+  final double? specialPrice;
+  final List<String> images;
+
+  ComboOption({
+    required this.unitId,
+    required this.variantId,
+    required this.productionCost,
+    required this.sellingPrice,
+    this.specialPrice,
+    this.images = const [],
+  });
+
+  Map<String, dynamic> toMap() => {
+        'unitId': unitId,
+        'variantId': variantId,
+        'productionCost': productionCost,
+        'sellingPrice': sellingPrice,
+        'specialPrice': specialPrice,
+        'images': images,
+      };
+
+  factory ComboOption.fromMap(Map<String, dynamic> map) => ComboOption(
+        unitId: map['unitId'] ?? '',
+        variantId: map['variantId'] ?? '',
+        productionCost: (map['productionCost'] ?? 0).toDouble(),
+        sellingPrice: (map['sellingPrice'] ?? 0).toDouble(),
+        specialPrice:
+            map['specialPrice'] != null ? (map['specialPrice'] as num).toDouble() : null,
+        images: List<String>.from(map['images'] ?? []),
+      );
 }
