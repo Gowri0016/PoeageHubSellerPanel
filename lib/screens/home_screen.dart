@@ -10,6 +10,8 @@ import 'payments_payouts_screen.dart';
 import 'reports_analytics_screen.dart';
 import 'support_screen.dart';
 import 'settings_screen.dart';
+import 'offer_banner_screen.dart';
+import 'offer_scroller_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   static const routeName = '/home';
@@ -73,6 +75,18 @@ class HomeScreen extends StatelessWidget {
         'Settings',
         'App settings',
         SettingsScreen.routeName,
+      ),
+      _ManagementItem(
+        Icons.image,
+        'Offer Banners',
+        'Manage offer banners',
+        OfferBannerScreen.routeName,
+      ),
+      _ManagementItem(
+        Icons.announcement,
+        'Offer Scroller',
+        'Manage offer text',
+        OfferScrollerScreen.routeName,
       ),
     ];
 

@@ -18,6 +18,8 @@ import 'screens/support_screen.dart';
 import 'screens/settings_screen.dart';
 import 'models/product.dart';
 import 'screens/rejected_screen.dart';
+import 'screens/offer_banner_screen.dart';
+import 'screens/offer_scroller_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,6 +66,9 @@ class MyApp extends StatelessWidget {
               const ReportsAnalyticsScreen(),
           SupportScreen.routeName: (context) => const SupportScreen(),
           SettingsScreen.routeName: (context) => const SettingsScreen(),
+          OfferBannerScreen.routeName: (context) => const OfferBannerScreen(),
+          OfferScrollerScreen.routeName: (context) =>
+              const OfferScrollerScreen(),
         },
       ),
     );
